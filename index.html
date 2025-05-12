@@ -2,12 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Glucose Trends — 2020-02-22</title>
+  <title>Sugar Rush</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Glucose Trends on 2020-02-22</h1>
-  <div id="chart"></div>
+  <h1>Glucose Trends on 5th Day for 16 Patients</h1>
+  <div class="controls">
+    <button id="reset-button">Reset Selection</button>
+  </div>
+  <div class="gender-filter">
+    <div class="filter-title">Filter by Gender:</div>
+    <label class="gender-checkbox">
+      <input type="checkbox" id="male-checkbox" checked> Male
+    </label>
+    <label class="gender-checkbox">
+      <input type="checkbox" id="female-checkbox" checked> Female
+    </label>
+  </div>
+  <div id="chart" align="center"></div>
 
   <!-- D3.js -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
