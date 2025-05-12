@@ -15,11 +15,15 @@ const patients = Array.from({length:16}, (_,i) =>
         .then(data => ({ id, data }))
     )
   ).then(all => {
-    // Filter each to 2020-02-22
     const day = '2020-02-22';
     all.forEach(({ id, data }) => {
-      const filtered = data.filter(d => d.timestamp.getUTCFullYear()===2020
-        && d3.timeFormat('%Y-%m-%d')(d.timestamp)===day);
+      // 1) drop any rows where timestamp parsing failed
+      const clean = data.filter(d => d.timestamp != null);
+      // 2) then filter to the target day
+      const filtered = clean.filter(d => 
+        d.timestamp.getUTCFullYear() === 2020 &&
+        d3.timeFormat('%Y-%m-%d')(d.timestamp) === day
+      );
       renderChart(id, filtered);
     });
   });
