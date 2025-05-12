@@ -6,7 +6,7 @@ const parseRow = d => ({
 
 Promise.all(
   patients.map(id =>
-    d3.csv(`data/${id}/Dexcom_${id}.csv`, parseRow)
+    d3.csv(`data/Dexcom_${id}.csv`, parseRow)
       .then(data => ({ id, data: data.filter(d => d.timestamp) }))
   )
 ).then(all => {
