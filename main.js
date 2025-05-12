@@ -15,15 +15,24 @@ const patients = Array.from({length:16}, (_,i) =>
         .then(data => ({ id, data }))
     )
   ).then(all => {
-    const day = '2020-02-22';
     all.forEach(({ id, data }) => {
-      // 1) drop any rows where timestamp parsing failed
-      const clean = data.filter(d => d.timestamp != null);
-      // 2) then filter to the target day
-      const filtered = clean.filter(d => 
-        d.timestamp.getUTCFullYear() === 2020 &&
-        d3.timeFormat('%Y-%m-%d')(d.timestamp) === day
+      // 1) Drop any rows parseRow couldn’t parse
+      const clean = data.filter(d => d.timestamp);
+  
+      if (clean.length === 0) {
+        renderChart(id, []);  // no data at all
+        return;
+      }
+  
+      // 2) Find that patient’s last date
+      const maxTs = d3.max(clean, d => d.timestamp);
+      const lastDay = d3.timeFormat('%Y-%m-%d')(maxTs);
+  
+      // 3) Filter to only that lastDay
+      const filtered = clean.filter(d =>
+        d3.timeFormat('%Y-%m-%d')(d.timestamp) === lastDay
       );
+  
       renderChart(id, filtered);
     });
   });
