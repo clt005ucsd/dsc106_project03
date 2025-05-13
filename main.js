@@ -70,7 +70,7 @@ Promise.all(
     };
 
   // Set up SVG dimensions
-    const margin = { top: 30, right: 180, bottom: 90, left: 60 };
+    const margin = { top: 60, right: 180, bottom: 0, left: 60 };
     const width  = 1000 - margin.left - margin.right;
     const height = 600 - margin.top  - margin.bottom + 60;
 
@@ -397,7 +397,7 @@ Promise.all(
     // Group for carb color legend
     const carbLegendGroup = svg.append('g')
       .attr('class', 'carb-legend-group')
-      .attr('transform', `translate(${width / 2 - 80},${height + 60})`)
+      .attr('transform', `translate(${width / 2 - 80},${-60})`)
       .style('display', 'none');
 
     // Function to update food annotations
@@ -676,7 +676,7 @@ Promise.all(
     legendDiv.append('div')
         .style('font-weight', 'bold')
         .style('margin-bottom', '10px')
-        .style('font-size', '11px')
+        .style('font-size', '20px')
         .text('Select patients:');
         
     withData.forEach(p => {
