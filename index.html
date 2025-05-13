@@ -60,9 +60,13 @@
       <li>We considered using only tooltips for food logs, but the vertical bands provide a much clearer temporal link between meals and glucose changes.</li>
       <li>We considered using categorical color for food annotations, but a gradient encoding provides a more intuitive sense of "more" vs. "less" carbs.</li>
     </ul>
-    <p><strong>Final Choices:</strong> We prioritized clarity, interactivity, and the ability to compare both across and within patients. The combination of line chart, interactive legend, and gradient-encoded annotations best supports these goals.</p>
+    <p><strong>Final Choices:</strong></p>
+    <p>We prioritized clarity, interactivity, and the ability to compare both across and within patients. The combination of line chart, interactive legend, and gradient-encoded annotations best supports these goals.</p>
 
     <h2>Development Process</h2>
+    <p><strong>Motivation:</strong></p>
+    <p>We were interested in examining how food intake drives glucose level fluctuations, so we plotted continuous glucose readings over a 24‑hour period, highlighting the timing and magnitude of post‑meal spikes. We also included a macronutrient breakdown for each meal for every patient to allow readers to identify how certain types of foods affect glucose levels.</p>
+
     <p><strong>Teamwork and Task Division:</strong></p>
     <ul>
       <li>Data wrangling and preprocessing (handling different file formats, date/time normalization)</li>
@@ -71,12 +75,12 @@
       <li>Annotation and gradient legend implementation</li>
       <li>Testing and debugging across all patient files</li>
     </ul>
-    <p><strong>Time Spent:</strong> The project took approximately <b>30–40 people-hours</b> in total.</p>
+    <p><strong>Time Spent:</strong> The project took approximately <b>12 hours</b> in total.</p>
     <ul>
-      <li>Data cleaning and normalization: ~8 hours (handling inconsistent date/time formats was especially time-consuming)</li>
-      <li>Visualization and D3.js coding: ~15 hours</li>
-      <li>Interactive features and UI polish: ~10 hours</li>
-      <li>Testing, debugging, and documentation: ~5–7 hours</li>
+      <li>Data cleaning and normalization: ~2 hours (handling inconsistent date/time formats was especially time-consuming)</li>
+      <li>Visualization and D3.js coding: ~4 hours</li>
+      <li>Interactive features and UI polish: ~4 hours</li>
+      <li>Testing and debugging: ~2 hours</li>
     </ul>
     <p><strong>Challenges and Commentary:</strong></p>
     <ul>
