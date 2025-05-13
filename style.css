@@ -112,3 +112,36 @@ body {
     margin-right: 5px;
   }
   
+  .project-notes {
+    max-width: 900px;
+    margin: 40px auto 30px auto;
+    padding: 32px 28px 24px 28px;
+    background: #fafbfc;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    font-size: 1.08rem;
+    color: #222;
+  }
+  .project-notes h2 {
+    margin-top: 0;
+    color: #1a4a7a;
+    font-size: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+  }
+  .project-notes ul {
+    margin: 0 0 16px 20px;
+    padding: 0;
+  }
+  .project-notes li {
+    margin-bottom: 7px;
+    line-height: 1.5;
+  }
+  .project-notes p {
+    margin: 10px 0 18px 0;
+  }
+  .project-notes strong, .project-notes b {
+    color: #1a4a7a;
+  }
+  

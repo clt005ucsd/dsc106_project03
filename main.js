@@ -70,14 +70,14 @@ Promise.all(
     };
 
   // Set up SVG dimensions
-    const margin = { top: 30, right: 180, bottom: 50, left: 60 };
+    const margin = { top: 30, right: 180, bottom: 90, left: 60 };
     const width  = 1000 - margin.left - margin.right;
-    const height = 600 - margin.top  - margin.bottom;
+    const height = 600 - margin.top  - margin.bottom + 60;
 
   const svg = d3.select('#chart')
     .append('svg')
       .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top  + margin.bottom)
+      .attr('height', height + margin.top  + margin.bottom + 60)
     .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -147,7 +147,7 @@ Promise.all(
         .attr('class', 'x-axis-label')
         .attr('text-anchor', 'middle')
         .attr('x', width / 2)
-        .attr('y', height + margin.bottom - 15)
+        .attr('y', height + margin.bottom - 50)
         .style('font-size', '12px')
         .text('Time of Day');
         
@@ -394,13 +394,20 @@ Promise.all(
     // Group for food annotations
     const foodAnnotations = svg.append('g')
       .attr('class', 'food-annotations');
-      
+    // Group for carb color legend
+    const carbLegendGroup = svg.append('g')
+      .attr('class', 'carb-legend-group')
+      .attr('transform', `translate(${width / 2 - 80},${height + 60})`)
+      .style('display', 'none');
+
     // Function to update food annotations
     function updateFoodAnnotations() {
       // Remove existing annotations
       foodAnnotations.selectAll('*').remove();
+      // Hide carb legend by default
+      carbLegendGroup.style('display', 'none');
       
-      // Only show food annotations when exactly one patient is selected
+      // Only show food annotations and legend when exactly one patient is selected
       if (selectedPatients.size !== 1) return;
       
       // Get the selected patient ID
@@ -408,7 +415,7 @@ Promise.all(
       const patient = withData.find(p => p.id === selectedId);
       
       if (!patient || !patient.values || patient.values.length === 0) {
-        console.error(`No data found for patient ${selectedId}`);
+        console.error(`No data for patient ${selectedId}`);
         return;
       }
       
@@ -417,18 +424,10 @@ Promise.all(
       const targetDayYMD = d3.timeFormat('%Y-%m-%d')(originalTimestamp);
       const targetDayMDY = d3.timeFormat('%-m/%-d/%Y')(originalTimestamp);
       
-      console.log(`Patient ${selectedId} - Target day YYYY-MM-DD: ${targetDayYMD}`);
-      console.log(`Patient ${selectedId} - Target day M/D/YYYY: ${targetDayMDY}`);
       
       // Load food log for the selected patient
       d3.csv(`data/Food_Log_${selectedId}.csv`).then(foodData => {
         console.log(`Loaded ${foodData.length} food entries for patient ${selectedId}`);
-        
-        // Check the date format in the food log
-        if (foodData.length > 0) {
-          console.log(`Sample date format for patient ${selectedId}: ${foodData[0].date}`);
-          console.log(`Sample column names: ${Object.keys(foodData[0]).join(', ')}`);
-        }
         
         // Normalize the food data - simplify by just replacing slashes with dashes
         const normalizedFoodData = foodData.map(food => {
@@ -457,29 +456,7 @@ Promise.all(
         });
         
         console.log(`Found ${dayFoods.length} food entries for ${targetDay}`);
-        
-        // If still no entries found, try matching just the day and month
-        if (dayFoods.length === 0) {
-          console.log(`All entries for patient ${selectedId}:`, foodData.map(d => d.date || 'no date').join(', '));
-          
-          // Get day and month from original timestamp
-          const targetDayNum = originalTimestamp.getDate();
-          const targetMonthNum = originalTimestamp.getMonth() + 1; // 0-based to 1-based
-          
-          // Try matching just the day and month parts
-          const targetDayPart = `-${targetMonthNum}-${targetDayNum}`;
-          const targetDayPartAlt = `-${String(targetMonthNum).padStart(2, '0')}-${String(targetDayNum).padStart(2, '0')}`;
-          
-          dayFoods = normalizedFoodData.filter(d => {
-            if (!d.date) return false;
-            const dateStr = d.date.trim();
-            return dateStr.includes(targetDayPart) || dateStr.includes(targetDayPartAlt);
-          });
-          
-          console.log(`After day/month matching, found ${dayFoods.length} entries`);
-        }
-        
-        if (dayFoods.length === 0) return;
+        if (dayFoods.length === 0) return; //some patients have foods logged on different days than the experiment
         
         // Group foods by time
         const foodsByTime = {};
@@ -489,7 +466,7 @@ Promise.all(
           const timeKey = food.timeField || food.time || food.time_of_day;
           
           if (!timeKey) {
-            console.warn(`Missing time for food entry: ${food.logged_food || food.food || 'Unknown'}`);
+            console.warn("Food entry has not time????");
             return;
           }
           
@@ -499,8 +476,16 @@ Promise.all(
           foodsByTime[timeKey].push(food);
         });
         
-        // Debug time keys
-        console.log(`Time keys found: ${Object.keys(foodsByTime).join(', ')}`);
+        // Compute total carbs for each annotation
+        const carbTotals = Object.values(foodsByTime).map(foods => {
+          return foods.reduce((sum, food) => sum + (+food.total_carb || 0), 0);
+        });
+        const minCarb = Math.min(...carbTotals);
+        const maxCarb = Math.max(...carbTotals);
+        // Use d3.interpolateRdBu but reversed so blue is low, red is high
+        const carbColor = d3.scaleLinear()
+          .domain([minCarb, maxCarb])
+          .range([d3.rgb('#2171b5'), d3.rgb('#de2d26')]);
         
         // Create annotations for each time entry
         Object.entries(foodsByTime).forEach(([time, foods]) => {
@@ -528,20 +513,13 @@ Promise.all(
               hour = +time;
               minute = 0;
             } else {
-              console.warn(`Unexpected time format: ${time}`);
-              // Default to midnight if we can't parse
-              hour = 0;
-              minute = 0;
+              console.warn(`Wrong??? time format: ${time}`);
             }
             
             foodTime.setHours(hour);
             foodTime.setMinutes(minute);
             foodTime.setSeconds(0);
           }
-          
-          // Create a vertical band for this food entry
-          const xPos = x(foodTime);
-          const bandWidth = 10; // Width of the annotation band
           
           // Calculate summed nutrients
           const nutrients = {
@@ -562,12 +540,19 @@ Promise.all(
             });
           });
           
+          // Get color for this annotation based on total_carb
+          const bandColor = carbColor(nutrients.total_carb);
+          
+          const xPos = x(foodTime);
+          const bandWidth = 10; // Width of the annotation band
+          
           const band = foodAnnotations.append('rect')
             .attr('x', xPos - bandWidth/2)
             .attr('y', 0)
             .attr('width', bandWidth)
             .attr('height', height)
-            .attr('fill', d3.color(color(selectedId)).copy({opacity: 0.2}))
+            .attr('fill', bandColor)
+            .attr('fill-opacity', 0.3)
             .attr('stroke', color(selectedId))
             .attr('stroke-width', 1)
             .attr('stroke-dasharray', '3,3')
@@ -578,11 +563,7 @@ Promise.all(
               foods.forEach(food => {
                 const foodName = food.logged_food || food.food || 'Unknown food';
                 foodListHTML += `
-                  <div style="margin-bottom: 5px;">
-                    <strong>${foodName}</strong>
-                    ${food.amount ? `- ${food.amount} ${food.unit || ''}` : ''}
-                  </div>
-                `;
+                  <div style=\"margin-bottom: 5px;\">\n                    <strong>${foodName}</strong>\n                    ${food.amount ? `- ${food.amount} ${food.unit || ''}` : ''}\n                  </div>\n                `;
               });
               
               // Show detailed tooltip
@@ -593,8 +574,7 @@ Promise.all(
                 .html(`
                   <strong>Food Entries at ${time}</strong><br>
                   ${foodListHTML}
-                  <hr style="margin: 5px 0">
-                  <strong>Total Nutrients:</strong><br>
+                  <hr style=\"margin: 5px 0\">\n                  <strong>Total Nutrients:</strong><br>
                   Calories: ${Math.round(nutrients.calorie) || 'N/A'}<br>
                   Carbs: ${Math.round(nutrients.total_carb * 10) / 10 || 'N/A'}g<br>
                   Sugar: ${Math.round(nutrients.sugar * 10) / 10 || 'N/A'}g<br>
@@ -604,7 +584,8 @@ Promise.all(
                 
               // Highlight the band
               d3.select(this)
-                .attr('fill', d3.color(color(selectedId)).copy({opacity: 0.3}))
+                .attr('fill', bandColor)
+                .attr('fill-opacity', 0.5)
                 .attr('stroke-width', 2);
             })
             .on('mouseout', function() {
@@ -613,10 +594,11 @@ Promise.all(
               
               // Restore band appearance
               d3.select(this)
-                .attr('fill', d3.color(color(selectedId)).copy({opacity: 0.2}))
+                .attr('fill', bandColor)
+                .attr('fill-opacity', 0.3)
                 .attr('stroke-width', 1);
             });
-            
+          
           // Add a small indicator at the top
           foodAnnotations.append('text')
             .attr('x', xPos)
@@ -626,6 +608,50 @@ Promise.all(
             .attr('fill', color(selectedId))
             .text(foods.length > 1 ? '🍽️+' : '🍽️');
         });
+
+        // --- Carb color legend ---
+        // Only show if more than one annotation (otherwise gradient is not meaningful)
+        if (Object.keys(foodsByTime).length > 1) {
+          carbLegendGroup.style('display', 'block');
+          carbLegendGroup.selectAll('*').remove();
+          // Draw gradient bar
+          const legendWidth = 160;
+          const legendHeight = 12;
+          // Create a gradient definition
+          const defs = carbLegendGroup.append('defs');
+          const gradient = defs.append('linearGradient')
+            .attr('id', 'carb-gradient')
+            .attr('x1', '0%').attr('y1', '0%')
+            .attr('x2', '100%').attr('y2', '0%');
+          gradient.append('stop')
+            .attr('offset', '0%')
+            .attr('stop-color', d3.rgb('#2171b5'));
+          gradient.append('stop')
+            .attr('offset', '100%')
+            .attr('stop-color', d3.rgb('#de2d26'));
+          // Draw the bar
+          carbLegendGroup.append('rect')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', legendWidth)
+            .attr('height', legendHeight)
+            .attr('fill', 'url(#carb-gradient)');
+          // Add labels
+          carbLegendGroup.append('text')
+            .attr('x', 0)
+            .attr('y', legendHeight + 18)
+            .attr('text-anchor', 'start')
+            .attr('font-size', 13)
+            .attr('fill', '#222')
+            .text('Lower carbs');
+          carbLegendGroup.append('text')
+            .attr('x', legendWidth)
+            .attr('y', legendHeight + 18)
+            .attr('text-anchor', 'end')
+            .attr('font-size', 13)
+            .attr('fill', '#222')
+            .text('Higher carbs');
+        }
       })
       .catch(error => {
         console.error(`Error loading food log for patient ${selectedId}:`, error);

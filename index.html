@@ -20,10 +20,61 @@
     </label>
   </div>
   <div id="chart" align="center"></div>
-
+  <p align="center"></p>
   <!-- D3.js -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <!-- your main script -->
   <script src="main.js"></script>
+
+  <section class="project-notes">
+    <h2>Design Rationale</h2>
+    <p><strong>Visual Encodings:</strong></p>
+    <ul>
+      <li><b>Line Chart for Glucose Trends:</b> We chose a multi-line chart to show glucose levels over time for each patient. This allows for easy comparison of trends and outliers across individuals.</li>
+      <li><b>Color for Patient Identity:</b> Each patient is assigned a unique color, making it easy to distinguish between lines. The legend reinforces this mapping and allows for interactive selection.</li>
+      <li><b>Food Log Annotations:</b> When a single patient is selected, vertical bands are overlaid to indicate food log entries. This directly links meal times to glucose responses.</li>
+      <li><b>Carb Content Gradient:</b> The annotation bands are colored on a blue-to-red gradient, with blue representing lower total carbs and red representing higher total carbs. This encoding makes it easy to visually identify high-carb and low-carb meals at a glance.</li>
+      <li><b>Tooltip Details:</b> Hovering over a food annotation reveals a tooltip with the time, food(s), and nutrient breakdown, providing detailed context without cluttering the main view.</li>
+    </ul>
+    <p><strong>Interaction Techniques:</strong></p>
+    <ul>
+      <li><b>Legend-based Patient Selection:</b> Users can click legend items to focus on specific patients, reducing visual clutter and enabling detailed analysis.</li>
+      <li><b>Gender Filtering:</b> Checkboxes allow users to filter patients by gender, supporting subgroup analysis.</li>
+      <li><b>Reset Button:</b> A reset button restores all selections and filters, making it easy to return to the default view.</li>
+      <li><b>Dynamic Carb Legend:</b> When only one patient is selected, a color legend appears to explain the carb gradient, improving interpretability.</li>
+    </ul>
+    <p><strong>Alternatives Considered:</strong></p>
+    <ul>
+      <li>We considered using small multiples (one chart per patient), but this would make comparison across patients more difficult and require more screen space.</li>
+      <li>We considered using only tooltips for food logs, but the vertical bands provide a much clearer temporal link between meals and glucose changes.</li>
+      <li>We considered using categorical color for food annotations, but a gradient encoding provides a more intuitive sense of "more" vs. "less" carbs.</li>
+    </ul>
+    <p><strong>Final Choices:</strong> We prioritized clarity, interactivity, and the ability to compare both across and within patients. The combination of line chart, interactive legend, and gradient-encoded annotations best supports these goals.</p>
+
+    <h2>Development Process</h2>
+    <p><strong>Teamwork and Task Division:</strong></p>
+    <ul>
+      <li>Data wrangling and preprocessing (handling different file formats, date/time normalization)</li>
+      <li>Visualization design and D3.js implementation</li>
+      <li>Interactive features (legend selection, tooltips, gender filtering)</li>
+      <li>Annotation and gradient legend implementation</li>
+      <li>Testing and debugging across all patient files</li>
+    </ul>
+    <p><strong>Time Spent:</strong> The project took approximately <b>30–40 people-hours</b> in total.</p>
+    <ul>
+      <li>Data cleaning and normalization: ~8 hours (handling inconsistent date/time formats was especially time-consuming)</li>
+      <li>Visualization and D3.js coding: ~15 hours</li>
+      <li>Interactive features and UI polish: ~10 hours</li>
+      <li>Testing, debugging, and documentation: ~5–7 hours</li>
+    </ul>
+    <p><strong>Challenges and Commentary:</strong></p>
+    <ul>
+      <li>The most time-consuming aspect was handling the variety of data formats in the food logs (different date and time fields, inconsistent delimiters, missing values).</li>
+      <li>Debugging edge cases for specific patients required careful inspection and flexible code.</li>
+      <li>Designing a clear, interactive UI that works for both group and individual analysis required several iterations and user feedback.</li>
+      <li>The use of D3.js allowed for powerful custom visualizations, but required careful management of SVG elements and event handlers.</li>
+    </ul>
+    <p><strong>Summary:</strong> The final application balances clarity, flexibility, and depth of analysis, supporting both overview and detailed exploration of glucose and food log data.</p>
+  </section>
 </body>
 </html>
