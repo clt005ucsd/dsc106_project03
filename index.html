@@ -42,54 +42,49 @@
     <p><strong>Visual Encodings:</strong></p>
     <ul>
       <li><b>Line Chart for Glucose Trends:</b> We chose a multi-line chart to show glucose levels over time for each patient. This allows for easy comparison of trends and outliers across individuals.</li>
-      <li><b>Color for Patient Identity:</b> Each patient is assigned a unique color, making it easy to distinguish between lines. The legend reinforces this mapping and allows for interactive selection.</li>
-      <li><b>Food Log Annotations:</b> When a single patient is selected, vertical bands are overlaid to indicate food log entries. This directly links meal times to glucose responses.</li>
-      <li><b>Carb Content Gradient:</b> The annotation bands are colored on a blue-to-red gradient, with blue representing lower total carbs and red representing higher total carbs. This encoding makes it easy to visually identify high-carb and low-carb meals at a glance.</li>
-      <li><b>Tooltip Details:</b> Hovering over a food annotation reveals a tooltip with the time, food(s), and nutrient breakdown, providing detailed context without cluttering the main view.</li>
+      <li><b>Color for each Patient:</b> Each patient is assigned a unique color, making it easy to distinguish between lines. The legend reinforces this mapping and allows for interactive selection.</li>
+      <li><b>Food Log Annotations:</b> When a single patient is selected, vertical bands are overlaid on the corresponding time to indicate food log entries. This way users can easily see and compare the time a patient ate to their glucose level after they ate.</li>
+      <li><b>Food Log Annotation Color:</b> The annotation bands are colored on a blue-to-red gradient, with blue representing lower total carbs and red representing higher total carbs (also makes sense because blue is commonly associated with good and red is commonly associated with bad). This is so users can easily get a sense of which are high-carb and low-carb meals at a glance and intuitively.</li>
     </ul>
-    <p><strong>Interaction Techniques:</strong></p>
+    <p><strong>Interactions:</strong></p>
     <ul>
-      <li><b>Legend-based Patient Selection:</b> Users can click legend items to focus on specific patients, reducing visual clutter and enabling detailed analysis.</li>
-      <li><b>Gender Filtering:</b> Checkboxes allow users to filter patients by gender, supporting subgroup analysis.</li>
+      <li><b>Patient Selection/Filtering:</b> Users can click legend items to focus on specific patients, so they can more easily identify trends</li>
+      <li><b>Gender Filtering:</b> Checkbox UI so users can filter by gender and compare blood glucose levels by gender</li>
       <li><b>Reset Button:</b> A reset button restores all selections and filters, making it easy to return to the default view.</li>
-      <li><b>Dynamic Carb Legend:</b> When only one patient is selected, a color legend appears to explain the carb gradient, improving interpretability.</li>
+      <li><b>Hover Tooltip:</b> Hovering over the line and/or a food annotation reveals a tooltip with the time, food(s) eaten, and nutrient breakdown.</li>
+      <li><b>Carb Legend:</b> When only one patient is selected, a color legend appears to explain the carb gradient. If not one patient is selected, this legend is irrelevant and so it doesn't show.</li>
     </ul>
     <p><strong>Alternatives Considered:</strong></p>
     <ul>
-      <li>We considered using small multiples (one chart per patient), but this would make comparison across patients more difficult and require more screen space.</li>
-      <li>We considered using only tooltips for food logs, but the vertical bands provide a much clearer temporal link between meals and glucose changes.</li>
-      <li>We considered using categorical color for food annotations, but a gradient encoding provides a more intuitive sense of "more" vs. "less" carbs.</li>
+      <li>Our initial idea was to plot all 10 days, but we figured it was too much information for the goal of our visualization. We just wanted users could get an idea of how their glucose levels would typically change throughout the day depending on their breakfast, lunch, dinner, snacks, etc. So one day is enough.</li>
+      <li>We thought of having all the patients be in multiple charts, but this makes comparison across patients hard and takes up a lot of screen space. A single chart that you can filter is much better.</li>
+      <li>We originally had dots to indicate food logs, but the vertical bands provide a much clearer visual signal.</li>
+      <li>To visually encode the carb content of a food log, we tried out varying the opacity, saturation, setting a threshold (if it's below 50g it's blue, else red), but a gradient from red to blue encoding provided the most intuitive sense of "more" vs. "less" carbs.</li>
     </ul>
-    <p><strong>Final Choices:</strong></p>
-    <p>We prioritized clarity, interactivity, and the ability to compare both across and within patients. The combination of line chart, interactive legend, and gradient-encoded annotations best supports these goals.</p>
 
     <h2>Development Process</h2>
     <p><strong>Motivation:</strong></p>
     <p>We were interested in examining how food intake drives glucose level fluctuations, so we plotted continuous glucose readings over a 24‑hour period, highlighting the timing and magnitude of post‑meal spikes. We also included a macronutrient breakdown for each meal for every patient to allow readers to identify how certain types of foods affect glucose levels.</p>
 
-    <p><strong>Teamwork and Task Division:</strong></p>
+    <p><strong>Teamwork:</strong></p>
+    <p>We all worked on the visualization together on the same device. This way we could instantly voice concerns/ideas for the plot.</p>
+    <p>The project took approximately <b>12 hours</b> in total.</p>
     <ul>
-      <li>Data wrangling and preprocessing (handling different file formats, date/time normalization)</li>
-      <li>Visualization design and D3.js implementation</li>
-      <li>Interactive features (legend selection, tooltips, gender filtering)</li>
-      <li>Annotation and gradient legend implementation</li>
-      <li>Testing and debugging across all patient files</li>
-    </ul>
-    <p><strong>Time Spent:</strong> The project took approximately <b>12 hours</b> in total.</p>
-    <ul>
-      <li>Data cleaning and normalization: ~2 hours (handling inconsistent date/time formats was especially time-consuming)</li>
+      <li>Data cleaning and normalization: ~2 hours (handling inconsistent date/time formats was especially time consuming. We tried a lot of things before realizing that some of the dates were straight up outside the range of the study)</li>
       <li>Visualization and D3.js coding: ~4 hours</li>
       <li>Interactive features and UI polish: ~4 hours</li>
-      <li>Testing and debugging: ~2 hours</li>
+      <li>Testing and debugging: ~2 hours (a lot of considering what is considered "intuitive" behavior". Like if I click on a selected legend, I "intuitively" expect it to deselect. So it should deselect)</li>
     </ul>
-    <p><strong>Challenges and Commentary:</strong></p>
+    <p><strong>Challenges:</strong></p>
     <ul>
-      <li>The most time-consuming aspect was handling the variety of data formats in the food logs (different date and time fields, inconsistent delimiters, missing values).</li>
-      <li>Debugging edge cases for specific patients required careful inspection and flexible code.</li>
-      <li>Designing a clear, interactive UI that works for both group and individual analysis required several iterations and user feedback.</li>
-      <li>The use of D3.js allowed for powerful custom visualizations, but required careful management of SVG elements and event handlers.</li>
+      <li>Deciding "intuitive" user interaction behaviors. For example, when I've selected something and hover over something else, I expect the selected item to still be highlighted along with the hovered patient. Before this, when the user hovered over another patient, their selected patients wouldn't be highlighted anymore, which didn't seem like very intuitive behavior.
+        This part required a lot of back and forth discussion and sending it to other people to test and give feedback. By sending it to other people, we discover how interactions should behave so users can have an intuitive experience.</li>
+      </li>
+      <li>Related to the above point, a lot of users didn't "know" you could do certain interactions. They didn't know you could hover over the food logs to get more detailed information, or filter patients by legend, for example. So we decided to put a big unmissable instructions box at the top.</li>
+      <li>Handling the dates in the csv files took quite a long time. We were so confused why it wasn't working only to realize some of the date formats were different and the column names are also slightly different. Some dates in the food log are also straight up different from the glucose tracking dates (One patient 
+        had their food logs a year after their study period?).</li>
+      <li>Designing the filtering for both individual (selecting patients) and aggregate filtering (based on gender) took a lot of time to figure out. Also needed to decide what was intuitive behavior again if users used both filters at once.</li>
     </ul>
-    <p><strong>Summary:</strong> The final application balances clarity, flexibility, and depth of analysis, supporting both overview and detailed exploration of glucose and food log data.</p>
   </section>
 </body>
 </html>
