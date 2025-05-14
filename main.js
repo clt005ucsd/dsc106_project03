@@ -4,7 +4,6 @@ const parseRow = d => ({
   glucose:   +d['Glucose Value (mg/dL)']
 });
 
-// First load demographics data to get gender information
 d3.csv('data/Demographics.csv').then(demographics => {
   // Create a map of patient IDs to gender
   const patientGenders = new Map();
@@ -14,7 +13,7 @@ d3.csv('data/Demographics.csv').then(demographics => {
     patientGenders.set(id, d.Gender);
   });
   
-  // Now load the glucose data
+  // load the glucose data
 Promise.all(
   patients.map(id =>
     d3.csv(`data/Dexcom_${id}.csv`, parseRow)
@@ -43,7 +42,7 @@ Promise.all(
       );
       
       // Normalize all timestamps to a single reference day
-      const referenceDate = new Date(2023, 0, 1); // Jan 1, 2023 as reference
+      const referenceDate = new Date(2023, 0, 1);
       p.values = p.values.map(d => {
         const normalizedTimestamp = new Date(referenceDate);
         normalizedTimestamp.setHours(d.timestamp.getHours());
@@ -60,7 +59,7 @@ Promise.all(
   // Remove patients with no data
   const withData = all.filter(p => p.values && p.values.length);
     
-    // Track selected patients (none selected by default means show all)
+    // Track selected patients
     const selectedPatients = new Set();
     
     // Track gender filter state
@@ -113,7 +112,7 @@ Promise.all(
       .style('stroke-width', 2)
       .style('display', 'none');
 
-    // x‐scale over the union of all timestamps (normalized to a single day)
+    // x‐scale over the union of all timestamps
   const x = d3.scaleTime()
     .domain(d3.extent(
       d3.merge(withData.map(p => p.values.map(d => d.timestamp)))
@@ -250,7 +249,7 @@ Promise.all(
         }
       });
       
-      // Only show if we're close enough to a line (within 50px)
+      // Only show if within 50px
       if (closestToMouse && minDistance < 50) {
         // Show and position vertical line
         verticalLine
@@ -316,7 +315,7 @@ Promise.all(
     
     // Function to update line visibility based on selected patients and gender filter
     function updateVisibility() {
-      // If no patients are selected, show all (that pass gender filter)
+      // If no patients are selected, show all
       const showAll = selectedPatients.size === 0;
       
       patientLines.selectAll('path')
@@ -333,7 +332,7 @@ Promise.all(
             (gender === 'UNKNOWN');
             
           if (!passesGenderFilter) {
-            return 0; // Hide completely if filtered by gender
+            return 0;
           }
           
           // Check selection filter
@@ -402,15 +401,9 @@ Promise.all(
 
     // Function to update food annotations
     function updateFoodAnnotations() {
-      // Remove existing annotations
       foodAnnotations.selectAll('*').remove();
-      // Hide carb legend by default
       carbLegendGroup.style('display', 'none');
-      
-      // Only show food annotations and legend when exactly one patient is selected
       if (selectedPatients.size !== 1) return;
-      
-      // Get the selected patient ID
       const selectedId = Array.from(selectedPatients)[0];
       const patient = withData.find(p => p.id === selectedId);
       
@@ -419,7 +412,6 @@ Promise.all(
         return;
       }
       
-      // Get the target day in both YYYY-MM-DD and M/D/YYYY formats
       const originalTimestamp = patient.values[0].originalTimestamp;
       const targetDayYMD = d3.timeFormat('%Y-%m-%d')(originalTimestamp);
       const targetDayMDY = d3.timeFormat('%-m/%-d/%Y')(originalTimestamp);
@@ -429,40 +421,30 @@ Promise.all(
       d3.csv(`data/Food_Log_${selectedId}.csv`).then(foodData => {
         console.log(`Loaded ${foodData.length} food entries for patient ${selectedId}`);
         
-        // Normalize the food data - simplify by just replacing slashes with dashes
+        // Normalize the food data
         const normalizedFoodData = foodData.map(food => {
-          // Replace slashes with dashes in date field if it exists
           if (food.date && food.date.includes('/')) {
             food.date = food.date.replace(/\//g, '-');
           }
-          
-          // Store time field from either 'time' or 'time_of_day'
           food.timeField = food.time || food.time_of_day;
           
           return food;
         });
-        
-        // Get target day with dashes for consistency
         const targetDay = targetDayYMD.replace(/\//g, '-');
-        
-        // Filter for the target day
         let dayFoods = normalizedFoodData.filter(d => {
-          // Try to match the date - both might have dashes now
           if (!d.date) return false;
-          
-          // Simple substring matching (to handle cases where format varies but day/month/year are the same)
           const foodDate = d.date.trim();
           return foodDate.includes(targetDay) || targetDay.includes(foodDate);
         });
         
         console.log(`Found ${dayFoods.length} food entries for ${targetDay}`);
-        if (dayFoods.length === 0) return; //some patients have foods logged on different days than the experiment
+        if (dayFoods.length === 0) return;
         
         // Group foods by time
         const foodsByTime = {};
         
         dayFoods.forEach(food => {
-          // Get the time field, with fallbacks and ensure we're using all possible time field names
+          // Get the time field
           const timeKey = food.timeField || food.time || food.time_of_day;
           
           if (!timeKey) {
@@ -482,34 +464,29 @@ Promise.all(
         });
         const minCarb = Math.min(...carbTotals);
         const maxCarb = Math.max(...carbTotals);
-        // Use d3.interpolateRdBu but reversed so blue is low, red is high
+        // blue is low, red is high
         const carbColor = d3.scaleLinear()
           .domain([minCarb, maxCarb])
           .range([d3.rgb('#2171b5'), d3.rgb('#de2d26')]);
         
         // Create annotations for each time entry
         Object.entries(foodsByTime).forEach(([time, foods]) => {
-          // Parse the time
-          let foodTime = new Date(2023, 0, 1); // Same reference date as glucose data
+          let foodTime = new Date(2023, 0, 1);
           
           // Handle different time formats
           if (time.includes(':')) {
-            // Format: HH:MM:SS or HH:MM
             const timeParts = time.split(':');
             foodTime.setHours(+timeParts[0]);
             foodTime.setMinutes(+timeParts[1]);
             foodTime.setSeconds(timeParts.length > 2 ? +timeParts[2] : 0);
           } else {
-            // Format: HH:MM (without colon) or just hour
             let hour = 0;
             let minute = 0;
             
             if (time.length === 4) {
-              // Format: HHMM
               hour = +time.substring(0, 2);
               minute = +time.substring(2, 4);
             } else if (time.length <= 2) {
-              // Just hour
               hour = +time;
               minute = 0;
             } else {
@@ -609,8 +586,7 @@ Promise.all(
             .text(foods.length > 1 ? '🍽️+' : '🍽️');
         });
 
-        // --- Carb color legend ---
-        // Only show if more than one annotation (otherwise gradient is not meaningful)
+        // carb color legend
         if (Object.keys(foodsByTime).length > 1) {
           carbLegendGroup.style('display', 'block');
           carbLegendGroup.selectAll('*').remove();
